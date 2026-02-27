@@ -37,6 +37,7 @@
 # Include docker launch scripts for Mac/Linux
 !run_docker.sh
 !research/run_docker_notebook.sh
+!setup-kanban.sh
 
 # QC Config Files:
 # config.json

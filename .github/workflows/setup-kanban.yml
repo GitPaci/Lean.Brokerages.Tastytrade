@@ -1,0 +1,51 @@
+name: Setup Lab Agile Planning Kanban Board
+
+on:
+  push:
+    branches:
+      - "claude/github-kanban-setup-*"
+    paths:
+      - "setup-kanban.sh"
+      - ".github/workflows/setup-kanban.yml"
+  workflow_dispatch:
+    inputs:
+      org:
+        description: "GitHub org or user that will own the new repo"
+        required: false
+        default: "GitPaci"
+
+jobs:
+  setup-kanban:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create lab-agile-planning repo and Kanban board
+        env:
+          # The built-in GITHUB_TOKEN does not have permission to create repos
+          # or manage Projects v2 in an org.  A PAT stored as a secret is
+          # required.  Name it KANBAN_SETUP_TOKEN in the repo / org secrets.
+          #
+          # Required token scopes:
+          #   repo          – create the lab-agile-planning repository
+          #   project       – create and manage Projects v2
+          #   read:org      – resolve the org node ID for GraphQL
+          GITHUB_TOKEN: ${{ secrets.KANBAN_SETUP_TOKEN }}
+          GITHUB_ORG: ${{ github.event.inputs.org || 'GitPaci' }}
+        run: |
+          if [[ -z "$GITHUB_TOKEN" ]]; then
+            echo "::warning::KANBAN_SETUP_TOKEN secret is not set."
+            echo "::warning::To run this workflow, add a PAT with scopes"
+            echo "::warning::  repo, project, read:org"
+            echo "::warning::as the secret KANBAN_SETUP_TOKEN in this repo."
+            echo ""
+            echo "You can still run the script locally:"
+            echo "  export GITHUB_TOKEN=<your-pat>"
+            echo "  bash setup-kanban.sh --org GitPaci"
+            exit 0
+          fi
+          bash setup-kanban.sh --org "$GITHUB_ORG"
